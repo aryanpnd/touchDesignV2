@@ -38,7 +38,7 @@ export const modules = [
         id: 'rms',
         title: 'RMS',
         icon: require('@/assets/icons/rms.png'), // Replace with actual RMS icon
-        value: 'Access',
+        // value: 'Access',
         onPress: () => console.log('RMS pressed'),
     },
 ];
