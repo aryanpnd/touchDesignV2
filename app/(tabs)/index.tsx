@@ -1,15 +1,13 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
+import {StyleSheet } from 'react-native';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Header } from '@/components/Header';
 import { PrimarySection } from '@/components/PrimarySection';
 import Schedule from '@/components/Schedule';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
+import { ModuleGrid } from '@/components/ModuleGrid';
 import { announcements } from '@/constants/announcementsDummy';
+import { modules } from '@/constants/quickLinksModules';
 
 export default function HomeScreen() {
   const handleProfilePress = () => {
@@ -19,6 +17,7 @@ export default function HomeScreen() {
   const handleNotificationPress = () => {
     console.log('Notifications pressed - navigate to notifications');
   };
+
 
   return (
     <ThemedView style={styles.container}>
@@ -40,6 +39,11 @@ export default function HomeScreen() {
         <AnnouncementBanner
           announcements={announcements}
           onViewAll={() => console.log('View all announcements pressed')}
+        />
+
+        <ModuleGrid 
+          modules={modules}
+          onEdit={() => console.log('Edit modules pressed')}
         />
       </ParallaxScrollView>
     </ThemedView>
