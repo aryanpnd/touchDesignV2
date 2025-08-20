@@ -11,34 +11,41 @@ import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-const HEADER_HEIGHT = 250;
+const HEADER_HEIGHT = 120; // Reduced height for PrimarySection
 
 type Props = PropsWithChildren<{
-  headerImage: ReactElement;
-  headerBackgroundColor: { dark: string; light: string };
+  headerComponent?: ReactElement;
+  headerBackgroundColor?: { dark: string; light: string };
 }>;
 
 export default function ParallaxScrollView({
   children,
-  headerImage,
+  headerComponent,
   headerBackgroundColor,
 }: Props) {
   const colorScheme = useColorScheme() ?? 'light';
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
   const bottom = useBottomTabOverflow();
+  
   const headerAnimatedStyle = useAnimatedStyle(() => {
+    if (!headerComponent) return {};
+    
     return {
       transform: [
         {
           translateY: interpolate(
             scrollOffset.value,
             [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
-            [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75]
+            [-HEADER_HEIGHT / 3, 0, HEADER_HEIGHT * 0.5]
           ),
         },
         {
-          scale: interpolate(scrollOffset.value, [-HEADER_HEIGHT, 0, HEADER_HEIGHT], [2, 1, 1]),
+          scale: interpolate(
+            scrollOffset.value, 
+            [-HEADER_HEIGHT, 0, HEADER_HEIGHT], 
+            [1.1, 1, 0.95]
+          ),
         },
       ],
     };
@@ -50,16 +57,27 @@ export default function ParallaxScrollView({
         ref={scrollRef}
         scrollEventThrottle={16}
         scrollIndicatorInsets={{ bottom }}
-        contentContainerStyle={{ paddingBottom: bottom }}>
-        <Animated.View
-          style={[
-            styles.header,
-            { backgroundColor: headerBackgroundColor[colorScheme] },
-            headerAnimatedStyle,
-          ]}>
-          {headerImage}
-        </Animated.View>
-        <ThemedView style={styles.content}>{children}</ThemedView>
+        contentContainerStyle={{ paddingBottom: bottom }}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        decelerationRate="normal">
+        
+        {/* Header Component (replaces headerImage) */}
+        {headerComponent && (
+          <Animated.View
+            style={[
+              styles.header,
+              headerBackgroundColor && { backgroundColor: headerBackgroundColor[colorScheme] },
+              headerAnimatedStyle,
+            ]}>
+            {headerComponent}
+          </Animated.View>
+        )}
+        
+        {/* Main Content */}
+        <ThemedView style={styles.content}>
+          {children}
+        </ThemedView>
       </Animated.ScrollView>
     </ThemedView>
   );
@@ -72,6 +90,7 @@ const styles = StyleSheet.create({
   header: {
     height: HEADER_HEIGHT,
     overflow: 'hidden',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,
