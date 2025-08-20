@@ -1,13 +1,13 @@
-import {StyleSheet } from 'react-native';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedView } from '@/components/ThemedView';
+import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { Header } from '@/components/Header';
+import { ModuleGrid } from '@/components/ModuleGrid';
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { PrimarySection } from '@/components/PrimarySection';
 import Schedule from '@/components/Schedule';
-import { AnnouncementBanner } from '@/components/AnnouncementBanner';
-import { ModuleGrid } from '@/components/ModuleGrid';
+import { ThemedView } from '@/components/ThemedView';
 import { announcements } from '@/constants/announcementsDummy';
 import { modules } from '@/constants/quickLinksModules';
+import { StyleSheet } from 'react-native';
 
 export default function HomeScreen() {
   const handleProfilePress = () => {
@@ -24,9 +24,7 @@ export default function HomeScreen() {
       <Header
         title="Touch"
         notificationCount={150}
-        profileImageUri="https://ums.lpu.in/Placements/DisplayImageforprofileupdation.aspx?mId=5GJ0%20s4sFrrrKWwV7y8ywg=="
-        userInitial="A"
-        onProfilePress={handleProfilePress}
+        logoSource={require('@/assets/images/lpu-logo.png')}
         onNotificationPress={handleNotificationPress}
       />
 

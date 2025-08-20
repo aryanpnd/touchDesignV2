@@ -1,33 +1,29 @@
-import { StyleSheet, TouchableOpacity, View, Image } from "react-native";
-import { ThemedView } from "./ThemedView";
-import { ThemedText } from "./ThemedText";
-import { IconSymbol } from "./ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { Image, ImageSourcePropType, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ThemedText } from "./ThemedText";
+import { ThemedView } from "./ThemedView";
 import { IconSymbolV2 } from "./ui/IconSymbolV2";
 
 interface HeaderProps {
   title?: string;
-  onProfilePress?: () => void;
+  onLogoPress?: () => void;
   onNotificationPress?: () => void;
   notificationCount?: number;
-  profileImageUri?: string;
-  userInitial?: string;
+  logoSource?: ImageSourcePropType; // <-- local/static image
 }
 
 export function Header({ 
   title = "Dashboard", 
-  onProfilePress, 
+  onLogoPress, 
   onNotificationPress,
   notificationCount = 0,
-  profileImageUri,
-  userInitial = "U"
+  logoSource,
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const iconColor = useThemeColor({}, 'icon');
   const backgroundColor = useThemeColor({}, 'background');
   const shadowColor = useThemeColor({ light: '#000', dark: '#000' }, 'text');
-  const tintColor = useThemeColor({}, 'tint');
 
   // Format notification count (show 99+ if > 99)
   const formatNotificationCount = (count: number): string => {
@@ -41,22 +37,18 @@ export function Header({
       backgroundColor,
       shadowColor,
     }]}>
-      {/* Left side - Profile button */}
+      {/* Left side - Logo */}
       <TouchableOpacity 
-        style={styles.profileButton}
-        onPress={onProfilePress}
+        style={styles.logoContainer}
+        onPress={onLogoPress}
         activeOpacity={0.7}
       >
-        {profileImageUri ? (
+        {logoSource && (
           <Image 
-            source={{ uri: profileImageUri }}
-            style={styles.profileImage}
-            resizeMode="cover"
+            source={logoSource}
+            style={styles.logo}
+            resizeMode="contain"
           />
-        ) : (
-          <ThemedText style={[styles.profileInitial, { color: tintColor }]}>
-            {userInitial.charAt(0).toUpperCase()}
-          </ThemedText>
         )}
       </TouchableOpacity>
 
@@ -100,22 +92,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
-  profileButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  logoContainer: {
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
   },
-  profileImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 18,
-  },
-  profileInitial: {
-    fontSize: 16,
-    fontWeight: '600',
+  logo: {
+    width: 36,
+    height: 36,
   },
   titleContainer: {
     flex: 1,
