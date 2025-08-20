@@ -1,7 +1,8 @@
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
-import { ThemedView } from './ThemedView';
-import { ThemedText } from './ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ThemedText } from './ThemedText';
+import { ThemedView } from './ThemedView';
 
 interface ClassCardProps {
   classTime: string;
@@ -79,50 +80,101 @@ export function ClassCard({
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={1}>
-      <ThemedView style={[
-        styles.card,
-        { 
-          backgroundColor: cardBackground,
-          borderColor: borderColor,
-        }
-      ]}>
-        {/* Header: Time and Status */}
-        <View style={styles.header}>
-          <ThemedText style={[styles.timeText, { color: textColor }]}>
-            {classTime}
-          </ThemedText>
-          <View style={[styles.statusChip, { backgroundColor: getStatusColor(status) }]}>
-            <ThemedText style={styles.chipText}>
-              {getStatusText(status)}
+      {status === 'ongoing' ? (
+        <LinearGradient
+          colors={['#f78c30', '#fe7b71']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.card,
+            { 
+              borderColor: '#f78c30',
+            }
+          ]}
+        >
+          {/* Header: Time and Status */}
+          <View style={styles.header}>
+            <ThemedText style={[styles.timeText, { color: '#ffffff' }]}>
+              {classTime}
             </ThemedText>
+            <View style={[styles.statusChip, { backgroundColor: 'rgba(255, 255, 255, 0.3)' }]}>
+              <ThemedText style={styles.chipText}>
+                {getStatusText(status)}
+              </ThemedText>
+            </View>
           </View>
-        </View>
 
-        {/* Subject */}
-        <View style={styles.subjectContainer}>
-          <ThemedText style={[styles.subjectName, { color: textColor }]} numberOfLines={1}>
-            [{subjectCode}] {subjectName}
-          </ThemedText>
-          <ThemedText style={[styles.locationText, { color: subtleTextColor }]}>
-            📍 {location}
-          </ThemedText>
-        </View>
+          {/* Subject */}
+          <View style={styles.subjectContainer}>
+            <ThemedText style={[styles.subjectName, { color: '#ffffff' }]} numberOfLines={1}>
+              [{subjectCode}] {subjectName}
+            </ThemedText>
+            <ThemedText style={[styles.locationText, { color: 'rgba(255, 255, 255, 0.8)' }]}>
+              📍 {location}
+            </ThemedText>
+          </View>
 
-        {/* Footer: Details and Attendance */}
-        <View style={styles.footer}>
-          <View style={styles.detailsContainer}>
-            <ThemedText style={[styles.detailText, { color: subtleTextColor }]}>
-              {classType.charAt(0).toUpperCase() + classType.slice(1)} • {section}
-              {group && ` • ${group}`}
+          {/* Footer: Details and Attendance */}
+          <View style={styles.footer}>
+            <View style={styles.detailsContainer}>
+              <ThemedText style={[styles.detailText, { color: 'rgba(255, 255, 255, 0.8)' }]}>
+                {classType.charAt(0).toUpperCase() + classType.slice(1)} • {section}
+                {group && ` • ${group}`}
+              </ThemedText>
+            </View>
+            <View style={[styles.attendanceChip, { backgroundColor: getAttendanceColor(attendanceStatus) }]}>
+              <ThemedText style={styles.chipText}>
+                {getAttendanceText(attendanceStatus)}
+              </ThemedText>
+            </View>
+          </View>
+        </LinearGradient>
+      ) : (
+        <ThemedView style={[
+          styles.card,
+          { 
+            backgroundColor: cardBackground,
+            borderColor: borderColor,
+          }
+        ]}>
+          {/* Header: Time and Status */}
+          <View style={styles.header}>
+            <ThemedText style={[styles.timeText, { color: textColor }]}>
+              {classTime}
+            </ThemedText>
+            <View style={[styles.statusChip, { backgroundColor: getStatusColor(status) }]}>
+              <ThemedText style={styles.chipText}>
+                {getStatusText(status)}
+              </ThemedText>
+            </View>
+          </View>
+
+          {/* Subject */}
+          <View style={styles.subjectContainer}>
+            <ThemedText style={[styles.subjectName, { color: textColor }]} numberOfLines={1}>
+              [{subjectCode}] {subjectName}
+            </ThemedText>
+            <ThemedText style={[styles.locationText, { color: subtleTextColor }]}>
+              📍 {location}
             </ThemedText>
           </View>
-          <View style={[styles.attendanceChip, { backgroundColor: getAttendanceColor(attendanceStatus) }]}>
-            <ThemedText style={styles.chipText}>
-              {getAttendanceText(attendanceStatus)}
-            </ThemedText>
+
+          {/* Footer: Details and Attendance */}
+          <View style={styles.footer}>
+            <View style={styles.detailsContainer}>
+              <ThemedText style={[styles.detailText, { color: subtleTextColor }]}>
+                {classType.charAt(0).toUpperCase() + classType.slice(1)} • {section}
+                {group && ` • ${group}`}
+              </ThemedText>
+            </View>
+            <View style={[styles.attendanceChip, { backgroundColor: getAttendanceColor(attendanceStatus) }]}>
+              <ThemedText style={styles.chipText}>
+                {getAttendanceText(attendanceStatus)}
+              </ThemedText>
+            </View>
           </View>
-        </View>
-      </ThemedView>
+        </ThemedView>
+      )}
     </TouchableOpacity>
   );
 }

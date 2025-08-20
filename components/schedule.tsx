@@ -1,13 +1,15 @@
-import { StyleSheet, ScrollView } from "react-native";
+import { classSchedule } from "@/constants/classesTodayDummy";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import React, { useEffect, useRef } from "react";
+import { ScrollView, StyleSheet } from "react-native";
+import { ClassCard } from "./ClassCard";
 import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
-import { ClassCard } from "./ClassCard";
-import { useThemeColor } from "@/hooks/useThemeColor";
-import { classSchedule } from "@/constants/classesTodayDummy";
 
 export default function Schedule() {
   const textColor = useThemeColor({}, 'text');
   const subtleTextColor = useThemeColor({ light: '#666', dark: '#aaa' }, 'text');
+  const scrollViewRef = useRef<ScrollView>(null);
   
   // Sample data - replace with your actual data
   const getCurrentDay = () => {
@@ -15,6 +17,26 @@ export default function Schedule() {
     const today = new Date();
     return days[today.getDay()];
   };
+
+  // Auto-scroll to ongoing class
+  useEffect(() => {
+    const ongoingClassIndex = classSchedule.findIndex(classItem => classItem.status === 'ongoing');
+    
+    if (ongoingClassIndex !== -1 && scrollViewRef.current) {
+      // Calculate scroll position: card width (280) + margin (16) = 296 per card
+      const scrollPosition = ongoingClassIndex * 296;
+      
+      // Add a slight delay to ensure the component is fully rendered
+      const timer = setTimeout(() => {
+        scrollViewRef.current?.scrollTo({
+          x: scrollPosition,
+          animated: true,
+        });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   return (
     <ThemedView style={styles.container}>
@@ -35,6 +57,7 @@ export default function Schedule() {
       </ThemedView>
 
       <ScrollView 
+        ref={scrollViewRef}
         horizontal 
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
