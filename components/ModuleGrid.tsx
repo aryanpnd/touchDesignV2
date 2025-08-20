@@ -1,16 +1,21 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { ThemedView } from './ThemedView';
-import { ThemedText } from './ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { Dimensions, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, {
+    Layout,
+    runOnJS,
+    SlideInLeft,
+    SlideInUp,
+    SlideOutDown,
+    SlideOutRight,
     useAnimatedStyle,
     useSharedValue,
     withSpring,
-    runOnJS,
-    withTiming,
+    withTiming
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { ThemedText } from './ThemedText';
+import { ThemedView } from './ThemedView';
 
 interface Module {
     id: string;
@@ -27,12 +32,12 @@ interface ModuleGridProps {
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-function ModuleCard({ module, isListView }: { module: Module; isListView: boolean }) {
+function ModuleCard({ module, isListView, index }: { module: Module; isListView: boolean; index: number }) {
     const textColor = useThemeColor({}, 'text');
     const subtleTextColor = useThemeColor({ light: '#8E8E93', dark: '#8E8E8F' }, 'text');
     const cardBackground = useThemeColor({ light: '#FFFFFF', dark: '#1C1C1E' }, 'background');
     const borderColor = useThemeColor({ light: '#F2F2F7', dark: '#2C2C2E' }, 'icon');
-    const chipBackground = useThemeColor({ light: '#007AFF', dark: '#0A84FF' }, 'tint');
+    const chipBackground = useThemeColor({ light: '#f78c30', dark: '#f78c30' }, 'tint');
     const chipTextColor = useThemeColor({ light: '#FFFFFF', dark: '#FFFFFF' }, 'background');
 
     const scale = useSharedValue(1);
@@ -47,22 +52,22 @@ function ModuleCard({ module, isListView }: { module: Module; isListView: boolea
     });
 
     const handlePressIn = () => {
-        scale.value = withSpring(0.96, {
-            damping: 20,
-            stiffness: 300,
+        scale.value = withSpring(0.98, {
+            damping: 25,
+            stiffness: 200,
         });
-        opacity.value = withTiming(0.8, { duration: 100 });
+        opacity.value = withTiming(0.9, { duration: 150 });
     };
 
     const handlePressOut = () => {
         scale.value = withSpring(1, {
-            damping: 20,
-            stiffness: 300,
+            damping: 25,
+            stiffness: 200,
         });
-        opacity.value = withTiming(1, { duration: 100 });
+        opacity.value = withTiming(1, { duration: 150 });
     };
 
-    const handlePress = () => {
+    const handlePress = () => {        
         if (module.onPress) {
             runOnJS(module.onPress)();
         }
@@ -70,6 +75,15 @@ function ModuleCard({ module, isListView }: { module: Module; isListView: boolea
 
     return (
         <AnimatedTouchable
+            entering={isListView 
+                ? SlideInLeft.delay(index * 80).duration(500)
+                : SlideInUp.delay(index * 100).duration(600)
+            }
+            exiting={isListView 
+                ? SlideOutRight.duration(400)
+                : SlideOutDown.duration(400)
+            }
+            layout={Layout.springify().damping(20).stiffness(150).duration(600)}
             style={[
                 isListView ? styles.listCard : styles.gridCard,
                 {
@@ -154,14 +168,8 @@ export function ModuleGrid({ modules, onEdit }: ModuleGridProps) {
 
     const layoutTransition = useSharedValue(0);
 
-    const animatedContainerStyle = useAnimatedStyle(() => {
-        return {
-            opacity: withTiming(1, { duration: 300 }),
-        };
-    });
-
     const toggleLayout = () => {
-        layoutTransition.value = withTiming(isListView ? 0 : 1, { duration: 300 });
+        layoutTransition.value = withTiming(isListView ? 0 : 1, { duration: 600 });
         setIsListView(!isListView);
     };
 
@@ -169,9 +177,11 @@ export function ModuleGrid({ modules, onEdit }: ModuleGridProps) {
         <ThemedView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
-                    Quick Access
-                </ThemedText>
+                <View>
+                    <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
+                        Quick Access
+                    </ThemedText>
+                </View>
 
                 <View style={styles.headerActions}>
                     {/* Layout Toggle Button */}
@@ -201,28 +211,28 @@ export function ModuleGrid({ modules, onEdit }: ModuleGridProps) {
             </View>
 
             {/* Content */}
-            <Animated.View style={[animatedContainerStyle]}>
+            <View>
                 {isListView ? (
                     <View style={styles.listContainer}>
-                        {modules.map((module) => (
-                            <View key={module.id} style={styles.listItemWrapper}>
-                                <ModuleCard module={module} isListView={true} />
+                        {modules.map((module, index) => (
+                            <View key={`list-${module.id}`} style={styles.listItemWrapper}>
+                                <ModuleCard module={module} isListView={true} index={index} />
                             </View>
                         ))}
                     </View>
                 ) : (
                     <View style={styles.gridContainer}>
-                        {modules.map((module) => (
+                        {modules.map((module, index) => (
                             <View
-                                key={module.id}
+                                key={`grid-${module.id}`}
                                 style={[styles.gridItemWrapper, { width: cardWidth }]}
                             >
-                                <ModuleCard module={module} isListView={false} />
+                                <ModuleCard module={module} isListView={false} index={index} />
                             </View>
                         ))}
                     </View>
                 )}
-            </Animated.View>
+            </View>
         </ThemedView>
     );
 }

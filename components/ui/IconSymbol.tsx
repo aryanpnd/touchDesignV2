@@ -21,6 +21,12 @@ const MAPPING = {
   'line.3.horizontal': 'menu',
   'person.circle': 'account-circle',
   'bell': 'notifications',
+  'calendar.badge.clock': 'schedule',
+  'calendar': 'event',
+  'magnifyingglass': 'search',
+  'magnifyingglass.circle.fill': 'search',
+  'gearshape': 'settings',
+  'gearshape.fill': 'settings',
 } as IconMapping;
 
 /**
