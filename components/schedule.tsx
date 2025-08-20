@@ -29,8 +29,8 @@ export default function Schedule() {
       classType: "practical" as const,
       section: "K22UR",
       group: "Group 2",
-      status: "ongoing" as const,
-      attendanceStatus: "not marked" as const,
+      status: "completed" as const,
+      attendanceStatus: "absent" as const,
     },
     {
       classTime: "11:30 - 12:30 PM",
@@ -39,7 +39,8 @@ export default function Schedule() {
       location: "28-305",
       classType: "lecture" as const,
       section: "K22UR",
-      status: "upcoming" as const,
+      group: "Group 1",
+      status: "ongoing" as const,
       attendanceStatus: "not marked" as const,
     },
     {
@@ -49,6 +50,7 @@ export default function Schedule() {
       location: "28-201",
       classType: "lecture" as const,
       section: "K22UR",
+      group: "Group 1",
       status: "upcoming" as const,
       attendanceStatus: "not marked" as const,
     },
@@ -147,5 +149,6 @@ const styles = StyleSheet.create({
   scrollContainer: {
     paddingLeft: 20,
     paddingRight: 4,
+    paddingBottom: 16,
   },
 });
