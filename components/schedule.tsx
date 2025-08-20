@@ -3,59 +3,13 @@ import { ThemedText } from "./ThemedText";
 import { ThemedView } from "./ThemedView";
 import { ClassCard } from "./ClassCard";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { classSchedule } from "@/constants/classesTodayDummy";
 
 export default function Schedule() {
   const textColor = useThemeColor({}, 'text');
   const subtleTextColor = useThemeColor({ light: '#666', dark: '#aaa' }, 'text');
   
   // Sample data - replace with your actual data
-  const classSchedule = [
-    {
-      classTime: "09:00 - 10:00 AM",
-      subjectCode: "CSE224",
-      subjectName: "Android App Development",
-      location: "28-506",
-      classType: "lecture" as const,
-      section: "K22UR",
-      group: "Group 1",
-      status: "completed" as const,
-      attendanceStatus: "present" as const,
-    },
-    {
-      classTime: "10:00 - 11:00 AM",
-      subjectCode: "CSE412",
-      subjectName: "Machine Learning",
-      location: "28-402",
-      classType: "practical" as const,
-      section: "K22UR",
-      group: "Group 2",
-      status: "completed" as const,
-      attendanceStatus: "absent" as const,
-    },
-    {
-      classTime: "11:30 - 12:30 PM",
-      subjectCode: "CSE301",
-      subjectName: "Database Management Systems",
-      location: "28-305",
-      classType: "lecture" as const,
-      section: "K22UR",
-      group: "Group 1",
-      status: "ongoing" as const,
-      attendanceStatus: "not marked" as const,
-    },
-    {
-      classTime: "02:00 - 03:00 PM",
-      subjectCode: "CSE401",
-      subjectName: "Software Engineering",
-      location: "28-201",
-      classType: "lecture" as const,
-      section: "K22UR",
-      group: "Group 1",
-      status: "upcoming" as const,
-      attendanceStatus: "not marked" as const,
-    },
-  ];
-
   const getCurrentDay = () => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const today = new Date();
@@ -104,6 +58,8 @@ export default function Schedule() {
           />
         ))}
       </ScrollView>
+
+      
     </ThemedView>
   );
 }
@@ -111,6 +67,7 @@ export default function Schedule() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingBottom:0,
     paddingVertical: 20,
   },
   titleContainer: {

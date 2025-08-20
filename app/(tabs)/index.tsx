@@ -8,6 +8,8 @@ import { ThemedView } from '@/components/ThemedView';
 import { Header } from '@/components/Header';
 import { PrimarySection } from '@/components/PrimarySection';
 import Schedule from '@/components/Schedule';
+import { AnnouncementBanner } from '@/components/AnnouncementBanner';
+import { announcements } from '@/constants/announcementsDummy';
 
 export default function HomeScreen() {
   const handleProfilePress = () => {
@@ -34,41 +36,11 @@ export default function HomeScreen() {
         headerBackgroundColor={{ light: '#f8fafc', dark: '#1f2937' }}
       >
         <Schedule />
-        {/* <ThemedView style={styles.titleContainer}>
-          <ThemedText type="title">Welcome!</ThemedText>
-          <HelloWave />
-        </ThemedView>
-        <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-          <ThemedText>
-            Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-            Press{' '}
-            <ThemedText type="defaultSemiBold">
-              {Platform.select({
-                ios: 'cmd + d',
-                android: 'cmd + m',
-                web: 'F12',
-              })}
-            </ThemedText>{' '}
-            to open developer tools.
-          </ThemedText>
-        </ThemedView>
-        <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          <ThemedText>
-            {`Tap the Explore tab to learn more about what's included in this starter app.`}
-          </ThemedText>
-        </ThemedView>
-        <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-          <ThemedText>
-            {`When you're ready, run `}
-            <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-            <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-            <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-            <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-          </ThemedText>
-        </ThemedView> */}
+        
+        <AnnouncementBanner
+          announcements={announcements}
+          onViewAll={() => console.log('View all announcements pressed')}
+        />
       </ParallaxScrollView>
     </ThemedView>
   );
