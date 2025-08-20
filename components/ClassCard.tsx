@@ -129,7 +129,7 @@ export function ClassCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
+    borderRadius: 24,
     padding: 16,
     marginRight: 16,
     borderWidth: 1,
