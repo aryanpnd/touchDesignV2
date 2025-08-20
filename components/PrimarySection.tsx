@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   attendanceLabel: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '500',
     letterSpacing: 0.3,
     textTransform: 'uppercase',

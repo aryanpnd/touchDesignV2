@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Header } from '@/components/Header';
 import { PrimarySection } from '@/components/PrimarySection';
+import Schedule from '@/components/Schedule';
 
 export default function HomeScreen() {
   const handleProfilePress = () => {
@@ -32,6 +33,7 @@ export default function HomeScreen() {
         headerComponent={<PrimarySection />}
         headerBackgroundColor={{ light: '#f8fafc', dark: '#1f2937' }}
       >
+        <Schedule />
         {/* <ThemedView style={styles.titleContainer}>
           <ThemedText type="title">Welcome!</ThemedText>
           <HelloWave />
