@@ -1,12 +1,12 @@
-import { StyleSheet, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { ScrollView, StyleSheet } from 'react-native';
 
-export default function SettingsScreen() {
+export default function ProfileScreen() {
   return (
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ThemedText type="title" style={styles.title}>Settings</ThemedText>
+        <ThemedText type="title" style={styles.title}>Profile</ThemedText>
         <ThemedText style={styles.subtitle}>
           Customize your app preferences
         </ThemedText>
