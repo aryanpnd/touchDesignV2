@@ -1,8 +1,8 @@
-import { StyleSheet, View } from 'react-native';
-import { ThemedView } from './ThemedView';
-import { ThemedText } from './ThemedText';
-import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { StyleSheet, View } from 'react-native';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import { ThemedText } from './ThemedText';
+import { ThemedView } from './ThemedView';
 
 export function PrimarySection() {
   const textColor = useThemeColor({}, 'text');
