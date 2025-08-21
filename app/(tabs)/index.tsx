@@ -18,6 +18,11 @@ export default function HomeScreen() {
     console.log('Notifications pressed - navigate to notifications');
   };
 
+  const handleModuleReorder = (newOrder: any[]) => {
+    console.log('Modules reordered:', newOrder.map(m => m.title));
+    // Here you would typically save the new order to storage or state management
+  };
+
 
   return (
     <ThemedView style={styles.container}>
@@ -44,6 +49,7 @@ export default function HomeScreen() {
         <ModuleGrid 
           modules={modules}
           onEdit={() => console.log('Edit modules pressed')}
+          onReorder={handleModuleReorder}
         />
       </ParallaxScrollView>
     </ThemedView>

@@ -1,7 +1,9 @@
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Dimensions, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import React, { useEffect, useState } from 'react';
+import { Dimensions, Image, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
     Layout,
     runOnJS,
@@ -28,11 +30,26 @@ interface Module {
 interface ModuleGridProps {
     modules: Module[];
     onEdit?: () => void;
+    onReorder?: (newOrder: Module[]) => void;
 }
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
-function ModuleCard({ module, isListView, index }: { module: Module; isListView: boolean; index: number }) {
+function ModuleCard({ 
+    module, 
+    isListView, 
+    index, 
+    isDragging, 
+    onDragStart, 
+    onDragEnd 
+}: { 
+    module: Module; 
+    isListView: boolean; 
+    index: number;
+    isDragging?: boolean;
+    onDragStart?: () => void;
+    onDragEnd?: () => void;
+}) {
     const textColor = useThemeColor({}, 'text');
     const subtleTextColor = useThemeColor({ light: '#8E8E93', dark: '#8E8E8F' }, 'text');
     const cardBackground = useThemeColor({ light: '#FFFFFF', dark: '#1C1C1E' }, 'background');
@@ -42,14 +59,61 @@ function ModuleCard({ module, isListView, index }: { module: Module; isListView:
 
     const scale = useSharedValue(1);
     const opacity = useSharedValue(1);
+    const translateX = useSharedValue(0);
+    const translateY = useSharedValue(0);
+    const zIndex = useSharedValue(0);
     const hasValue = module.value !== undefined && module.value !== null && module.value !== '';
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
-            transform: [{ scale: scale.value }],
+            transform: [
+                { scale: scale.value },
+                { translateX: translateX.value },
+                { translateY: translateY.value }
+            ],
             opacity: opacity.value,
+            zIndex: zIndex.value,
         };
     });
+
+    // Long press gesture for drag initiation
+    const longPressGesture = Gesture.LongPress()
+        .minDuration(300)
+        .onStart(() => {
+            // Add haptic feedback for drag start
+            if (Platform.OS === 'ios') {
+                runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
+            } else {
+                runOnJS(Haptics.selectionAsync)();
+            }
+            
+            if (onDragStart) {
+                runOnJS(onDragStart)();
+            }
+            scale.value = withSpring(1.05);
+            opacity.value = withTiming(0.9);
+            zIndex.value = 1000;
+        });
+
+    // Pan gesture for dragging
+    const panGesture = Gesture.Pan()
+        .onUpdate((event) => {
+            if (isDragging) {
+                translateX.value = event.translationX;
+                translateY.value = event.translationY;
+            }
+        })
+        .onEnd(() => {
+            if (isDragging && onDragEnd) {
+                runOnJS(onDragEnd)();
+            }
+            translateX.value = withSpring(0);
+            translateY.value = withSpring(0);
+            scale.value = withSpring(1);
+            zIndex.value = 0;
+        });
+
+    const composedGesture = Gesture.Simultaneous(longPressGesture, panGesture);
 
     const handlePressIn = () => {
         scale.value = withSpring(0.98, {
@@ -74,35 +138,48 @@ function ModuleCard({ module, isListView, index }: { module: Module; isListView:
     };
 
     return (
-        <AnimatedTouchable
-            entering={isListView 
-                ? SlideInLeft.delay(index * 80).duration(500)
-                : SlideInUp.delay(index * 100).duration(600)
-            }
-            exiting={isListView 
-                ? SlideOutRight.duration(400)
-                : SlideOutDown.duration(400)
-            }
-            layout={Layout.springify().damping(20).stiffness(150).duration(600)}
-            style={[
-                isListView ? styles.listCard : styles.gridCard,
-                {
-                    backgroundColor: cardBackground,
-                    borderColor: borderColor,
-                },
-                animatedStyle,
-            ]}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
-            onPress={handlePress}
-            activeOpacity={1}
-        >
+        <GestureDetector gesture={composedGesture}>
+            <AnimatedTouchable
+                entering={isListView 
+                    ? SlideInLeft.delay(index * 80).duration(500)
+                    : SlideInUp.delay(index * 100).duration(600)
+                }
+                exiting={isListView 
+                    ? SlideOutRight.duration(400)
+                    : SlideOutDown.duration(400)
+                }
+                layout={Layout.springify().damping(20).stiffness(150).duration(600)}
+                style={[
+                    isListView ? styles.listCard : styles.gridCard,
+                    {
+                        backgroundColor: cardBackground,
+                        borderColor: borderColor,
+                    },
+                    animatedStyle,
+                    isDragging && styles.draggingCard,
+                ]}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                onPress={handlePress}
+                activeOpacity={1}
+            >
             {/* Value Chip - Top Right */}
             {hasValue && (
                 <View style={[styles.valueChip, { backgroundColor: chipBackground }]}>
                     <ThemedText style={[styles.chipText, { color: chipTextColor }]}>
                         {module.value}
                     </ThemedText>
+                </View>
+            )}
+
+            {/* Drag Indicator */}
+            {isDragging && (
+                <View style={styles.dragIndicator}>
+                    <Ionicons
+                        name="move"
+                        size={16}
+                        color="#ffffff"
+                    />
                 </View>
             )}
 
@@ -152,11 +229,14 @@ function ModuleCard({ module, isListView, index }: { module: Module; isListView:
                 )}
             </View>
         </AnimatedTouchable>
+        </GestureDetector>
     );
 }
 
-export function ModuleGrid({ modules, onEdit }: ModuleGridProps) {
+export function ModuleGrid({ modules, onEdit, onReorder }: ModuleGridProps) {
     const [isListView, setIsListView] = useState(false);
+    const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+    const [moduleOrder, setModuleOrder] = useState(modules);
     const textColor = useThemeColor({}, 'text');
     const subtleTextColor = useThemeColor({ light: '#8E8E93', dark: '#8E8E8F' }, 'text');
     const buttonBackground = useThemeColor({ light: '#F2F2F7', dark: '#2C2C2E' }, 'icon');
@@ -168,22 +248,45 @@ export function ModuleGrid({ modules, onEdit }: ModuleGridProps) {
 
     const layoutTransition = useSharedValue(0);
 
+    useEffect(() => {
+        setModuleOrder(modules);
+    }, [modules]);
+
     const toggleLayout = () => {
         layoutTransition.value = withTiming(isListView ? 0 : 1, { duration: 600 });
         setIsListView(!isListView);
     };
 
+    const handleDragStart = (index: number) => {
+        setDraggingIndex(index);
+    };
+
+    const handleDragEnd = () => {
+        setDraggingIndex(null);
+        if (onReorder) {
+            onReorder(moduleOrder);
+        }
+    };
+
+    const moveModule = (fromIndex: number, toIndex: number) => {
+        const newOrder = [...moduleOrder];
+        const [movedItem] = newOrder.splice(fromIndex, 1);
+        newOrder.splice(toIndex, 0, movedItem);
+        setModuleOrder(newOrder);
+    };
+
     return (
         <ThemedView style={styles.container}>
             {/* Header */}
-            <View style={styles.header}>
-                <View>
-                    <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
-                        Quick Access
-                    </ThemedText>
-                </View>
-
-                <View style={styles.headerActions}>
+                <View style={styles.header}>
+                    <View>
+                        <ThemedText style={[styles.sectionTitle, { color: textColor }]}>
+                            Quick Access
+                        </ThemedText>
+                        <ThemedText style={[styles.sectionSubtitle, { color: subtleTextColor }]}>
+                            Long press to rearrange
+                        </ThemedText>
+                    </View>                <View style={styles.headerActions}>
                     {/* Layout Toggle Button */}
                     <TouchableOpacity
                         onPress={toggleLayout}
@@ -214,20 +317,34 @@ export function ModuleGrid({ modules, onEdit }: ModuleGridProps) {
             <View>
                 {isListView ? (
                     <View style={styles.listContainer}>
-                        {modules.map((module, index) => (
+                        {moduleOrder.map((module, index) => (
                             <View key={`list-${module.id}`} style={styles.listItemWrapper}>
-                                <ModuleCard module={module} isListView={true} index={index} />
+                                <ModuleCard 
+                                    module={module} 
+                                    isListView={true} 
+                                    index={index}
+                                    isDragging={draggingIndex === index}
+                                    onDragStart={() => handleDragStart(index)}
+                                    onDragEnd={handleDragEnd}
+                                />
                             </View>
                         ))}
                     </View>
                 ) : (
                     <View style={styles.gridContainer}>
-                        {modules.map((module, index) => (
+                        {moduleOrder.map((module, index) => (
                             <View
                                 key={`grid-${module.id}`}
                                 style={[styles.gridItemWrapper, { width: cardWidth }]}
                             >
-                                <ModuleCard module={module} isListView={false} index={index} />
+                                <ModuleCard 
+                                    module={module} 
+                                    isListView={false} 
+                                    index={index}
+                                    isDragging={draggingIndex === index}
+                                    onDragStart={() => handleDragStart(index)}
+                                    onDragEnd={handleDragEnd}
+                                />
                             </View>
                         ))}
                     </View>
@@ -252,6 +369,12 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: '700',
         letterSpacing: -0.4,
+    },
+    sectionSubtitle: {
+        fontSize: 12,
+        fontWeight: '500',
+        marginTop: 2,
+        opacity: 0.7,
     },
     headerActions: {
         flexDirection: 'row',
@@ -391,5 +514,24 @@ const styles = StyleSheet.create({
         fontSize: 11,
         fontWeight: '700',
         letterSpacing: 0.2,
+    },
+    draggingCard: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+        elevation: 8,
+    },
+    dragIndicator: {
+        position: 'absolute',
+        top: 8,
+        left: 8,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        borderRadius: 12,
+        width: 24,
+        height: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 15,
     },
 });
