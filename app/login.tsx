@@ -1,367 +1,377 @@
-import { Colors } from '@/constants/Colors';
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
-  Animated,
-  Dimensions,
-  Image,
-  Keyboard,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Dimensions,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import Animated, {
+    interpolate,
+    useAnimatedStyle,
+    useSharedValue
+} from 'react-native-reanimated';
 
-const { width, height } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-const slideContent = [
+interface SlideData {
+  id: number;
+  image: any;
+  title: string;
+  subtitle: string;
+}
+
+const slidesData: SlideData[] = [
   {
-    image: require('../assets/images/banner1.jpg'),
+    id: 1,
+    image: require('@/assets/images/banner1.jpg'),
+    title: 'Welcome to Touch',
+    subtitle: 'Your gateway to academic excellence and campus life',
   },
   {
-    image: require('../assets/images/logo.png'),
+    id: 2,
+    image: require('@/assets/images/lpu-logo.png'),
+    title: 'Stay Connected',
+    subtitle: 'Access your timetable, assignments, and more',
   },
   {
-    image: require('../assets/images/lpu-logo.png'),
+    id: 3,
+    image: require('@/assets/images/lpu-logo.png'),
+    title: 'Academic Success',
+    subtitle: 'Track your progress and achieve your goals',
   },
 ];
 
-const LoginScreen = () => {
-  const [registrationNumber, setRegistrationNumber] = useState('');
-  const [password, setPassword] = useState('');
+export default function LoginScreen() {
+  const router = useRouter();
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isSecureText, setIsSecureText] = useState(true);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
-  
+  const [regNumber, setRegNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const slideScrollRef = useRef<ScrollView>(null);
-  const containerHeight = useRef(new Animated.Value(height * 0.6)).current;
-  const autoScrollInterval = useRef<any>(null);
-
-  // Calculate safe heights to prevent going off-screen
-  const minFormHeight = height * 0.4; // Minimum 40% of screen
-  const maxFormHeight = height * 0.9; // Maximum 90% of screen to keep some slideshow visible
-  const defaultFormHeight = height * 0.6;
-  const focusedFormHeight = Math.min(height * 0.75, maxFormHeight); // 75% or max, whichever is smaller
+  
+  const slideAnimation = useSharedValue(0);
 
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (event) => {
-      setIsKeyboardVisible(true);
-      // Calculate height based on keyboard height, but don't exceed maxFormHeight
-      const keyboardHeight = event.endCoordinates.height;
-      const targetHeight = Math.min(height - keyboardHeight + 50, maxFormHeight);
-      animateContainerHeight(Math.max(targetHeight, minFormHeight));
-    });
-    
-    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-      setIsKeyboardVisible(false);
-      if (!isFocused) {
-        animateContainerHeight(defaultFormHeight);
-      }
-    });
-
-    // Auto scroll slideshow
-    startAutoScroll();
-
-    return () => {
-      keyboardDidShowListener?.remove();
-      keyboardDidHideListener?.remove();
-      if (autoScrollInterval.current) {
-        clearInterval(autoScrollInterval.current);
-      }
-    };
-  }, [isFocused]);
-
-  const startAutoScroll = () => {
-    autoScrollInterval.current = setInterval(() => {
-      setCurrentSlide((prevSlide) => {
-        const nextSlide = (prevSlide + 1) % slideContent.length;
-        slideScrollRef.current?.scrollTo({
-          x: nextSlide * width,
+    const interval = setInterval(() => {
+      const nextSlide = (currentSlide + 1) % slidesData.length;
+      setCurrentSlide(nextSlide);
+      
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({
+          x: nextSlide * screenWidth,
           animated: true,
         });
-        return nextSlide;
-      });
-    }, 3000);
-  };
+      }
+    }, 4000);
 
-  const animateContainerHeight = (toValue: number) => {
-    Animated.timing(containerHeight, {
-      toValue,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  };
+    return () => clearInterval(interval);
+  }, [currentSlide]);
 
-  const handleInputFocus = () => {
-    setIsFocused(true);
-    if (!isKeyboardVisible) {
-      animateContainerHeight(focusedFormHeight);
-    }
-  };
-
-  const handleInputBlur = () => {
-    setIsFocused(false);
-    if (!isKeyboardVisible) {
-      animateContainerHeight(defaultFormHeight);
-    }
+  const handleScroll = (event: any) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / screenWidth);
+    setCurrentSlide(index);
+    slideAnimation.value = scrollPosition / screenWidth;
   };
 
   const handleLogin = () => {
-    if (!registrationNumber.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
+    // Add login logic here
+    console.log('Login pressed', { regNumber, password });
     router.replace('/(tabs)');
   };
 
   const handleGuestLogin = () => {
+    // Add guest login logic here
+    console.log('Guest login pressed');
     router.replace('/(tabs)');
   };
 
   const handleForgotPassword = () => {
-    Alert.alert('Forgot Password', 'Password reset link will be sent to your registered email');
+    // Add forgot password logic here
+    console.log('Forgot password pressed');
   };
 
-  const onSlideChange = (event: any) => {
-    const slideIndex = Math.round(event.nativeEvent.contentOffset.x / width);
-    setCurrentSlide(slideIndex);
-  };
+  const animatedSlideStyle = useAnimatedStyle(() => {
+    return {
+      opacity: interpolate(slideAnimation.value, [currentSlide - 1, currentSlide, currentSlide + 1], [0.7, 1, 0.7]),
+      transform: [
+        {
+          scale: interpolate(slideAnimation.value, [currentSlide - 1, currentSlide, currentSlide + 1], [0.95, 1, 0.95])
+        }
+      ]
+    };
+  });
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <StatusBar hidden={true} />
       
-      {/* Background Slideshow - Only visible portion */}
-      <View style={[styles.backgroundContainer, { height: height }]}>
+      {/* Background Gradient */}
+      <LinearGradient
+        colors={['#f78c30', '#fe7b71', '#fd8f64']}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+
+      {/* Slideshow Section */}
+      <View style={styles.slideshowContainer}>
         <ScrollView
-          ref={slideScrollRef}
+          ref={scrollViewRef}
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={onSlideChange}
-          style={styles.backgroundSlideshow}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          style={styles.slideshow}
         >
-          {slideContent.map((slide, index) => (
-            <LinearGradient
-              key={index}
-              colors={['#f78c30', '#fe7b71', '#fd8f64']}
-              style={styles.backgroundSlide}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
+          {slidesData.map((slide, index) => (
+            <Animated.View 
+              key={slide.id} 
+              style={[styles.slide, index === currentSlide && animatedSlideStyle]}
             >
-              <Image source={slide.image} style={styles.backgroundImage} resizeMode="contain" />
-            </LinearGradient>
+              {/* <View style={styles.slideImageContainer}>
+              </View> */}
+                <Image source={slide.image} style={styles.slideImage} resizeMode="cover" />
+              <View style={styles.slideTextContainer}>
+                <Text style={styles.slideTitle}>{slide.title}</Text>
+                <Text style={styles.slideSubtitle}>{slide.subtitle}</Text>
+              </View>
+            </Animated.View>
           ))}
         </ScrollView>
-        
+
         {/* Slide Indicators */}
         <View style={styles.indicatorContainer}>
-          {slideContent.map((_, index) => (
+          {slidesData.map((_, index) => (
             <View
               key={index}
               style={[
                 styles.indicator,
-                currentSlide === index && styles.activeIndicator,
+                {
+                  backgroundColor: index === currentSlide ? '#ffffff' : 'rgba(255, 255, 255, 0.4)',
+                  width: index === currentSlide ? 24 : 8,
+                }
               ]}
             />
           ))}
         </View>
       </View>
 
-      {/* Login Form Container */}
-      <Animated.View style={[styles.formContainer, { height: containerHeight }]}>
-        <BlurView intensity={20} tint="light" style={styles.blurContainer}>
-          <ScrollView 
-            style={styles.scrollContainer}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scrollContent}
-          >
-            <View style={styles.formContent}>
-              {/* Login Title */}
-              <Text style={styles.loginTitle}>Login</Text>
-              
-              {/* Registration Number Input */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Registration Number</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={registrationNumber}
-                  onChangeText={setRegistrationNumber}
-                  placeholder="Enter your registration number"
-                  placeholderTextColor="#999"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                />
-              </View>
+      {/* Login Container with Curved Top */}
+      <View style={styles.loginContainer}>
+        <View style={styles.loginContent}>
+          {/* Login Header */}
+          <View style={styles.loginHeader}>
+            <Text style={styles.loginTitle}>Welcome Back</Text>
+            <Text style={styles.loginSubtitle}>Sign in to continue</Text>
+          </View>
 
-              {/* Password Input */}
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Password</Text>
-                <View style={styles.passwordContainer}>
-                  <TextInput
-                    style={[styles.textInput, styles.passwordInput]}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#999"
-                    secureTextEntry={isSecureText}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                  />
-                  <TouchableOpacity
-                    onPress={() => setIsSecureText(!isSecureText)}
-                    style={styles.eyeButton}
-                  >
-                    <Text style={styles.eyeText}>{isSecureText ? '👁️' : '👁️‍🗨️'}</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Forgot Password and Guest Login Row */}
-              <View style={styles.bottomLinksContainer}>
-                <TouchableOpacity onPress={handleForgotPassword}>
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleGuestLogin}>
-                  <Text style={styles.guestLinkText}>Guest Login</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Login Button */}
-              <TouchableOpacity onPress={handleLogin} style={styles.loginButton}>
-                <LinearGradient
-                  colors={[Colors.primary, Colors.secondary]}
-                  style={styles.loginButtonGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                >
-                  <Text style={styles.loginButtonText}>Login</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+          {/* Input Fields */}
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Registration Number</Text>
+              <TextInput
+                style={styles.input}
+                value={regNumber}
+                onChangeText={setRegNumber}
+                placeholder="Enter your registration number"
+                placeholderTextColor="#9CA3AF"
+                autoCapitalize="none"
+                keyboardType="default"
+              />
             </View>
-          </ScrollView>
-        </BlurView>
-      </Animated.View>
-    </View>
+
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[styles.input, styles.passwordInput]}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* Forgot Password */}
+          <TouchableOpacity style={styles.forgotPasswordContainer} onPress={handleForgotPassword}>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+
+          {/* Login Button */}
+          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+            <LinearGradient
+              colors={['#f78c30', '#fe7b71']}
+              style={styles.loginButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.loginButtonText}>Sign In</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Guest Login */}
+          <TouchableOpacity style={styles.guestButton} onPress={handleGuestLogin}>
+            <Text style={styles.guestButtonText}>Continue as Guest</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f78c30',
   },
-  backgroundContainer: {
+  backgroundGradient: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    // Removed bottom: 0 to prevent overflow
+    bottom: 0,
   },
-  backgroundSlideshow: {
+  slideshowContainer: {
+    flex: 1,
+    paddingTop: 60,
+  },
+  slideshow: {
     flex: 1,
   },
-  backgroundSlide: {
-    width,
-    height: '100%', // Use percentage instead of fixed height
+  slide: {
+    width: screenWidth,
+    flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 40,
+  },
+  slideImageContainer: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  slideImage: {
+    width: 140,
+    height: 140,
+    borderRadius: 80,
+  },
+  slideTextContainer: {
     alignItems: 'center',
   },
-  backgroundImage: {
-    width: width * 0.6,
-    height: height * 0.25, // Reduced from 0.3 to fit better
-    opacity: 0.3,
+  slideTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 12,
+    letterSpacing: -0.5,
+  },
+  slideSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    lineHeight: 22,
+    fontWeight: '400',
   },
   indicatorContainer: {
-    position: 'absolute',
-    top: height * 0.12, // Adjusted position
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: 40,
+    gap: 8,
   },
   indicator: {
-    width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    marginHorizontal: 4,
   },
-  activeIndicator: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    width: 24,
-  },
-  formContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    overflow: 'hidden',
-    // Add minimum height to prevent issues
-    minHeight: height * 0.4,
-  },
-  blurContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  formContent: {
-    padding: 24,
+  loginContainer: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    minHeight: screenHeight * 0.45,
     paddingTop: 32,
-    minHeight: height * 0.35, // Ensure minimum content height
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  loginTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+  loginContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+  },
+  loginHeader: {
+    alignItems: 'center',
     marginBottom: 32,
   },
+  loginTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 6,
+  },
+  loginSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    fontWeight: '400',
+  },
   inputContainer: {
-    marginBottom: 20,
+    gap: 20,
+    marginBottom: 16,
+  },
+  inputWrapper: {
+    gap: 8,
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    color: '#374151',
+    marginLeft: 4,
   },
-  textInput: {
-    height: 50,
+  input: {
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E5E7EB',
     borderRadius: 12,
     paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 16,
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    color: '#1F2937',
+    fontWeight: '400',
   },
   passwordContainer: {
     position: 'relative',
@@ -371,52 +381,51 @@ const styles = StyleSheet.create({
   },
   eyeButton: {
     position: 'absolute',
-    right: 15,
-    top: 15,
-    padding: 5,
+    right: 16,
+    top: 16,
+    padding: 4,
   },
-  eyeText: {
-    fontSize: 18,
+  eyeIcon: {
+    fontSize: 20,
   },
-  bottomLinksContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 30,
+  forgotPasswordContainer: {
+    alignItems: 'flex-end',
+    marginBottom: 24,
   },
   forgotPasswordText: {
-    color: Colors.primary,
     fontSize: 14,
-    fontWeight: '500',
-  },
-  guestLinkText: {
-    color: Colors.secondary,
-    fontSize: 14,
-    fontWeight: '500',
+    color: '#f78c30',
+    fontWeight: '600',
   },
   loginButton: {
-    marginBottom: 20,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    marginBottom: 16,
+    shadowColor: '#f78c30',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   loginButtonGradient: {
-    height: 50,
+    paddingVertical: 16,
     borderRadius: 12,
-    justifyContent: 'center',
     alignItems: 'center',
   },
   loginButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  guestButton: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+  },
+  guestButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
   },
 });
-
-export default LoginScreen;
