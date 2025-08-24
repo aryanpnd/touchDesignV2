@@ -1,5 +1,6 @@
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { ThemedText } from './ThemedText';
 import { ThemedView } from './ThemedView';
@@ -18,7 +19,24 @@ export function PrimarySection() {
     { id: 2, label: 'Pending Fees - 9000' },
     { id: 3, label: 'Hostel Booking' },
     { id: 4, label: 'Your Dost' },
+    { id: 5, label: 'Library' },
+    { id: 6, label: 'Transport' },
+    { id: 7, label: 'Student Portal' },
+    { id: 8, label: 'Exam Schedule' },
+    { id: 9, label: 'Assignments' },
+    { id: 10, label: 'Cafeteria' },
   ];
+
+  // Split chips into two rows
+  const getChipRows = (chips: typeof chipData) => {
+    const midpoint = Math.ceil(chips.length / 2);
+    return [
+      chips.slice(0, midpoint),
+      chips.slice(midpoint)
+    ];
+  };
+
+  const chipRows = getChipRows(chipData);
 
   // Dynamic color based on attendance
   const getAttendanceColor = (percentage: number) => {
@@ -41,24 +59,61 @@ export function PrimarySection() {
           </ThemedText>
         </View>
 
-        {/* Glass-like Info Chips Grid */}
-        <View style={styles.chipsGrid}>
-          {chipData.map((chip) => (
-            <View 
-              key={chip.id} 
-              style={[
-                styles.glassChip, 
-                { 
-                  backgroundColor: glassBackground,
-                  borderColor: glassBorder,
-                }
-              ]}
-            >
-              <ThemedText style={[styles.chipText, { color: textColor }]}>
-                {chip.label}
-              </ThemedText>
+        {/* Scrollable Glass-like Info Chips Grid */}
+        <View style={styles.chipsContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+            style={styles.scrollView}
+          >
+            <View style={styles.chipsGrid}>
+              {chipRows.map((rowChips, rowIndex) => (
+                <View key={rowIndex} style={styles.chipsRow}>
+                  {rowChips.map((chip) => (
+                    <View 
+                      key={chip.id} 
+                      style={[
+                        styles.glassChip, 
+                        { 
+                          backgroundColor: glassBackground,
+                          borderColor: glassBorder,
+                        }
+                      ]}
+                    >
+                      <ThemedText style={[styles.chipText, { color: textColor }]}>
+                        {chip.label}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              ))}
             </View>
-          ))}
+          </ScrollView>
+          
+          {/* Left blur overlay */}
+          <LinearGradient
+            colors={[
+              useThemeColor({ light: 'rgba(248, 248, 248, 1)', dark: 'rgba(28, 28, 30, 1)' }, 'background'),
+              useThemeColor({ light: 'rgba(248, 248, 248, 0)', dark: 'rgba(28, 28, 30, 0)' }, 'background')
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.leftBlurOverlay}
+            pointerEvents="none"
+          />
+          
+          {/* Right blur overlay */}
+          <LinearGradient
+            colors={[
+              useThemeColor({ light: 'rgba(248, 248, 248, 0)', dark: 'rgba(28, 28, 30, 0)' }, 'background'),
+              useThemeColor({ light: 'rgba(248, 248, 248, 1)', dark: 'rgba(28, 28, 30, 1)' }, 'background')
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.rightBlurOverlay}
+            pointerEvents="none"
+          />
         </View>
       </View>
 
@@ -120,11 +175,39 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     lineHeight: 34,
   },
-  chipsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  chipsContainer: {
     marginTop: 4,
+    position: 'relative',
+  },
+  scrollView: {
+    maxHeight: 85, // Height for both rows (32 * 2 + gap)
+    paddingLeft: 10,
+  },
+  scrollContent: {
+    paddingRight: 40, // Add padding to ensure last chip is visible
+  },
+  chipsGrid: {
+    gap: 8,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  leftBlurOverlay: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 20,
+    zIndex: 1,
+  },
+  rightBlurOverlay: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 20,
+    zIndex: 1,
   },
   glassChip: {
     paddingHorizontal: 12,

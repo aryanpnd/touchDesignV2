@@ -38,20 +38,21 @@ export default function HomeScreen() {
 
       <ParallaxScrollView
         headerComponent={
-          <PrimarySection />
+          <Schedule />
         }
         headerBackgroundColor={{ light: '#f8fafc', dark: '#1f2937' }}
       >
-        <Schedule />
         
-        <AnnouncementBanner
-          announcements={announcements}
-          onViewAll={() => console.log('View all announcements pressed')}
-        />
+        <PrimarySection />
 
         <ModuleGrid 
           modules={modules}
           onEdit={() => console.log('Edit modules pressed')}
+        />
+
+        <AnnouncementBanner
+          announcements={announcements}
+          onViewAll={() => console.log('View all announcements pressed')}
         />
 
         <AuthoritiesSection
