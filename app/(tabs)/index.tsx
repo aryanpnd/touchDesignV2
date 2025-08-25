@@ -38,12 +38,12 @@ export default function HomeScreen() {
 
       <ParallaxScrollView
         headerComponent={
-          <Schedule />
+          <PrimarySection />
         }
         headerBackgroundColor={{ light: '#f8fafc', dark: '#1f2937' }}
       >
         
-        <PrimarySection />
+        <Schedule />
 
         <ModuleGrid 
           modules={modules}
