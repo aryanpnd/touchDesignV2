@@ -25,4 +25,9 @@ export const Colors = {
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
   },
+  // Login screen gradient colors
+  gradientColors: ['#f78c30', '#fe7b71', '#fd8f64'],
+  primary: '#f78c30',
+  secondary: '#fe7b71',
+  accent: '#fd8f64',
 };

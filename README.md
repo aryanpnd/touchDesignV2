@@ -48,3 +48,25 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Test app icon & splash locally
+
+The project already includes an app icon and splash image under `assets/images` and the configuration in `app.json` is set to show a white background with the app logo centered.
+
+To test the splash and icon locally:
+
+1. Start the dev server:
+
+```powershell
+npx expo start
+```
+
+2. For a full splash experience you should build a development client (recommended):
+
+```powershell
+npx expo prebuild && npx eas build --profile development --platform all
+```
+
+Or run on an emulator/simulator where the native splash will be visible when the app launches.
+
+If you want to change the splash or icon, replace the files in `assets/images` (`splash-icon.png`, `icon.png`, `adaptive-icon.png`) and restart the dev server.

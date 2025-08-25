@@ -5,45 +5,59 @@ import Animated, {
   useAnimatedRef,
   useAnimatedStyle,
   useScrollViewOffset,
+  useSharedValue
 } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/ThemedView';
 import { useBottomTabOverflow } from '@/components/ui/TabBarBackground';
 import { useColorScheme } from '@/hooks/useColorScheme';
-
-const HEADER_HEIGHT = 120; // Reduced height for PrimarySection
+import { useState } from 'react';
 
 type Props = PropsWithChildren<{
   headerComponent?: ReactElement;
   headerBackgroundColor?: { dark: string; light: string };
+  minHeaderHeight?: number; // Minimum header height fallback
 }>;
 
 export default function ParallaxScrollView({
   children,
   headerComponent,
   headerBackgroundColor,
+  minHeaderHeight = 150, // Default fallback height
 }: Props) {
   const colorScheme = useColorScheme() ?? 'light';
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollOffset = useScrollViewOffset(scrollRef);
   const bottom = useBottomTabOverflow();
   
+  const [headerHeight, setHeaderHeight] = useState(minHeaderHeight);
+  const dynamicHeaderHeight = useSharedValue(minHeaderHeight);
+
+  const handleHeaderLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout;
+    const newHeight = Math.max(height, minHeaderHeight);
+    setHeaderHeight(newHeight);
+    dynamicHeaderHeight.value = newHeight;
+  };
+  
   const headerAnimatedStyle = useAnimatedStyle(() => {
     if (!headerComponent) return {};
+    
+    const currentHeaderHeight = dynamicHeaderHeight.value;
     
     return {
       transform: [
         {
           translateY: interpolate(
             scrollOffset.value,
-            [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
-            [-HEADER_HEIGHT / 3, 0, HEADER_HEIGHT * 0.5]
+            [-currentHeaderHeight, 0, currentHeaderHeight],
+            [-currentHeaderHeight / 3, 0, currentHeaderHeight * 0.5]
           ),
         },
         {
           scale: interpolate(
             scrollOffset.value, 
-            [-HEADER_HEIGHT, 0, HEADER_HEIGHT], 
+            [-currentHeaderHeight, 0, currentHeaderHeight], 
             [1.1, 1, 0.95]
           ),
         },
@@ -62,15 +76,19 @@ export default function ParallaxScrollView({
         bounces={true}
         decelerationRate="normal">
         
-        {/* Header Component (replaces headerImage) */}
+        {/* Header Component with dynamic height */}
         {headerComponent && (
           <Animated.View
             style={[
               styles.header,
+              { minHeight: minHeaderHeight },
               headerBackgroundColor && { backgroundColor: headerBackgroundColor[colorScheme] },
               headerAnimatedStyle,
-            ]}>
-            {headerComponent}
+            ]}
+            onLayout={handleHeaderLayout}>
+            <ThemedView style={styles.headerContent}>
+              {headerComponent}
+            </ThemedView>
           </Animated.View>
         )}
         
@@ -88,14 +106,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    height: HEADER_HEIGHT,
     overflow: 'hidden',
+    justifyContent: 'center',
+  },
+  headerContent: {
+    flex: 1,
     justifyContent: 'center',
   },
   content: {
     flex: 1,
     padding: 0,
-    // gap: 16,
     overflow: 'hidden',
   },
 });
